@@ -3,7 +3,10 @@ export type Story = {
   category: string;
   title: string;
   summary: string;
-  why: string;
+  whyItMatters: string;
+  context: string;
+  imageUrl: string;
+  source?: string;
   readTime: string;
 };
 
@@ -12,63 +15,98 @@ export const mockNews: Story[] = [
     id: '1',
     category: 'Technology',
     title: 'Major AI Labs Agree on New Safety Benchmarks',
-    summary:
-      'Several leading AI labs have adopted a shared evaluation framework for testing model safety before public release. The benchmark focuses on hallucination rates, misuse resistance, and transparency of model behavior.',
-    why: 'Shared standards could make AI rollouts more predictable and reduce risky competition dynamics.',
+    summary: 'Top labs aligned on one safety baseline before shipping frontier model updates.',
+    whyItMatters:
+      'Shared test standards make launches more comparable, reducing pressure to skip safety checks.',
+    context:
+      'The benchmark tracks hallucination reliability, misuse resistance, and model behavior disclosure.',
+    imageUrl:
+      'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80',
+    source: 'Joint lab statement',
     readTime: '35s',
   },
   {
     id: '2',
     category: 'Economy',
     title: 'Inflation Cools for Third Consecutive Month',
-    summary:
-      'Latest consumer price data shows slower year-over-year growth across energy and transportation categories. Core services remain elevated, but trend lines suggest easing pressure for households.',
-    why: 'A sustained cooldown may influence borrowing costs, wages, and central bank policy decisions.',
+    summary: 'Price growth eased again, with energy and transport trends pulling the index lower.',
+    whyItMatters:
+      'Lower inflation can improve household purchasing power and shift rate expectations.',
+    context:
+      'Core services are still sticky, but the recent trend supports a more stable policy outlook.',
+    imageUrl:
+      'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&q=80',
+    source: 'National statistics release',
     readTime: '30s',
   },
   {
     id: '3',
     category: 'World',
     title: 'Regional Summit Reaches Climate Infrastructure Pact',
-    summary:
-      'Twelve countries signed a financing plan to accelerate coastal resilience projects and grid modernization. The agreement includes shared procurement targets and annual progress reviews.',
-    why: 'Infrastructure timelines now have clearer funding paths, which can speed up adaptation outcomes.',
+    summary: 'Twelve countries signed a financing pact for coastal resilience and grid upgrades.',
+    whyItMatters:
+      'Funding clarity removes a major bottleneck and helps projects move from policy to execution.',
+    context:
+      'The pact includes common procurement targets and yearly delivery reviews across partners.',
+    imageUrl:
+      'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=1200&q=80',
+    source: 'Regional summit communiqué',
     readTime: '40s',
   },
   {
     id: '4',
     category: 'Science',
     title: 'Researchers Announce Breakthrough in Battery Density',
-    summary:
-      'A new solid-state design demonstrated higher energy density in controlled tests while maintaining thermal stability. Commercial deployment is still early, but pilot manufacturing has begun.',
-    why: 'Better batteries can lower EV costs and improve reliability for renewable energy storage.',
+    summary: 'A solid-state prototype achieved higher density while keeping thermal performance stable.',
+    whyItMatters:
+      'Higher density batteries can lower EV costs and reduce range anxiety.',
+    context:
+      'Pilot manufacturing is underway, though commercial rollout remains in early stages.',
+    imageUrl:
+      'https://images.unsplash.com/photo-1629276301820-0f3eedc29fd0?auto=format&fit=crop&w=1200&q=80',
+    source: 'Peer-reviewed research release',
     readTime: '30s',
   },
   {
     id: '5',
     category: 'Business',
     title: 'Global Retailers Expand Same-Day Logistics Networks',
-    summary:
-      'Retail giants are increasing local warehouse footprints and routing automation to reduce delivery windows. Analysts note higher upfront costs but stronger customer retention in urban markets.',
-    why: 'Faster logistics can reshape consumer expectations and increase pressure on smaller competitors.',
+    summary: 'Major retailers are adding local hubs and smarter routing to tighten delivery windows.',
+    whyItMatters:
+      'Faster shipping raises customer expectations and pressures smaller merchants to adapt quickly.',
+    context:
+      'The strategy is cost-heavy upfront but correlated with stronger retention in dense cities.',
+    imageUrl:
+      'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80',
+    source: 'Industry logistics report',
     readTime: '25s',
   },
   {
     id: '6',
     category: 'Health',
     title: 'New Public Health Dashboard Tracks Respiratory Trends',
-    summary:
-      'Health agencies launched a unified dashboard combining hospital intake, testing, and wastewater indicators. The platform aims to provide earlier detection of regional spikes.',
-    why: 'Earlier warning signals support faster local response and better resource planning.',
+    summary: 'A new dashboard combines hospital, testing, and wastewater signals in one view.',
+    whyItMatters:
+      'Earlier detection gives local teams more lead time to prepare staffing and supplies.',
+    context:
+      'The system is designed for weekly trend visibility instead of delayed retrospective analysis.',
+    imageUrl:
+      'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=1200&q=80',
+    source: 'Public health agency update',
     readTime: '30s',
   },
   {
     id: '7',
     category: 'Culture',
     title: 'Streaming Platforms Shift Toward Weekly Release Cadence',
-    summary:
-      'Several major platforms are moving away from full-season drops to weekly episode releases. Executives say the strategy increases sustained engagement and lowers churn.',
-    why: 'Release strategy changes affect audience habits, subscription value, and media conversation cycles.',
+    summary: 'Studios are moving from full-season drops to weekly episodes for major titles.',
+    whyItMatters:
+      'Weekly cadence extends audience engagement and improves retention windows for platforms.',
+    context:
+      'Executives report lower churn and longer social conversation cycles around each release.',
+    imageUrl:
+      'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=1200&q=80',
+    source: 'Streaming earnings commentary',
     readTime: '20s',
   },
 ];

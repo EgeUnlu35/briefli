@@ -1,48 +1,123 @@
-import React, { useMemo, useRef, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import Swiper from 'react-native-deck-swiper';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import Animated, { Extrapolation, interpolate, useSharedValue } from 'react-native-reanimated';
+import Carousel, { ICarouselInstance, TAnimationStyle } from 'react-native-reanimated-carousel';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppHeader } from '@/components/AppHeader';
 import { CompletionView } from '@/components/CompletionView';
 import { ProgressHeader } from '@/components/ProgressHeader';
 import { StoryCard } from '@/components/StoryCard';
-import { mockNews, Story } from '@/data/mockNews';
+import { mockNews } from '@/data/mockNews';
 import { colors, radii, spacing, typography } from '@/theme';
 
 export function TodayScreen() {
-  const swiperRef = useRef<Swiper<Story> | null>(null);
+  const carouselRef = useRef<ICarouselInstance | null>(null);
+  const previousIndexRef = useRef(0);
+  const pendingForwardDecisionRef = useRef<'read' | 'skip' | null>(null);
   const { width: screenWidth } = useWindowDimensions();
+  const directionAnimVal = useSharedValue(0);
   const [currentStreak, setCurrentStreak] = useState(12);
   const [sessionStarted, setSessionStarted] = useState(false);
   const [hasCompletedToday, setHasCompletedToday] = useState(false);
   const [streakAwardedForToday, setStreakAwardedForToday] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [expandedStoryId, setExpandedStoryId] = useState<string | null>(null);
   const [decisions, setDecisions] = useState<Record<number, 'read' | 'skip'>>({});
 
   const totalCount = mockNews.length;
-  const deckWidth = Math.min(380, Math.max(280, screenWidth - spacing.xl * 2));
-  const deckViewportHeight = 540;
-  const deckCardHeight = 430;
-  const deckCardTop = Math.max((deckViewportHeight - deckCardHeight) / 2, 0);
-  const cardHorizontalMargin = Math.max((screenWidth - deckWidth) / 2, 0);
+  const deckWidth = Math.min(360, Math.max(260, screenWidth - spacing.xxxl * 2));
+  const carouselViewportWidth = screenWidth;
+  const activeStoryId = currentIndex < totalCount ? mockNews[currentIndex]?.id : null;
+  const hasExpandedCurrentCard = Boolean(activeStoryId && expandedStoryId === activeStoryId);
+  const deckViewportHeight = hasExpandedCurrentCard ? 700 : 580;
+  const deckCardHeight = hasExpandedCurrentCard ? 620 : 500;
   const handledCount = currentIndex;
   const isComplete = handledCount >= totalCount;
   const readCount = useMemo(
     () => Object.values(decisions).filter((decision) => decision === 'read').length,
     [decisions]
   );
-  const skippedCount = useMemo(
-    () => Object.values(decisions).filter((decision) => decision === 'skip').length,
-    [decisions]
+
+  const finalizeBriefIfNeeded = () => {
+    if (currentIndex !== totalCount - 1) {
+      return false;
+    }
+
+    setExpandedStoryId(null);
+    setDecisions((current) => ({
+      ...current,
+      [currentIndex]: 'read',
+    }));
+    setHasCompletedToday(true);
+    setCurrentIndex(totalCount);
+    if (!streakAwardedForToday) {
+      setCurrentStreak((current) => current + 1);
+      setStreakAwardedForToday(true);
+    }
+
+    return true;
+  };
+
+  const animationStyle: TAnimationStyle = useCallback(
+    (value: number, index: number) => {
+      'worklet';
+
+      const translateY = interpolate(value, [0, 1], [0, -18], Extrapolation.CLAMP);
+      const translateX =
+        interpolate(value, [-1, 0], [deckWidth, 0], Extrapolation.CLAMP) * directionAnimVal.value;
+      const rotateZ =
+        interpolate(value, [-1, 0], [14, 0], Extrapolation.CLAMP) * directionAnimVal.value;
+      const scale = interpolate(value, [0, 1], [1, 0.95], Extrapolation.CLAMP);
+      const opacity = interpolate(value, [-1, -0.8, 0, 1], [0, 0.88, 1, 0.84], Extrapolation.EXTEND);
+      const zIndex = -10 * index;
+
+      return {
+        transform: [
+          { translateY },
+          { translateX },
+          { rotateZ: `${rotateZ}deg` },
+          { scale },
+        ],
+        opacity,
+        zIndex,
+      };
+    },
+    [deckWidth, directionAnimVal]
   );
+
+  const handleSnapToItem = (nextIndex: number) => {
+    const previousIndex = previousIndexRef.current;
+
+    if (nextIndex > previousIndex) {
+      const decision = pendingForwardDecisionRef.current ?? 'read';
+      setDecisions((current) => ({
+        ...current,
+        [previousIndex]: decision,
+      }));
+    } else if (nextIndex < previousIndex) {
+      setDecisions((current) => {
+        const next = { ...current };
+        delete next[nextIndex];
+        return next;
+      });
+    }
+
+    pendingForwardDecisionRef.current = null;
+    previousIndexRef.current = nextIndex;
+    setExpandedStoryId(null);
+    setCurrentIndex(nextIndex);
+  };
 
   const handleRestart = () => {
     setSessionStarted(true);
     setCurrentIndex(0);
+    setExpandedStoryId(null);
+    previousIndexRef.current = 0;
+    pendingForwardDecisionRef.current = null;
     setDecisions({});
-    swiperRef.current?.jumpToCardIndex(0);
+    carouselRef.current?.scrollTo({ index: 0, animated: false });
   };
 
   const handleBackToToday = () => {
@@ -58,19 +133,9 @@ export function TodayScreen() {
       return;
     }
 
-    const swiper = swiperRef.current;
-    if (!swiper) {
-      return;
-    }
-
-    const previousCardIndex = currentIndex - 1;
-    swiper.jumpToCardIndex(previousCardIndex);
-    setCurrentIndex(previousCardIndex);
-    setDecisions((current) => {
-      const next = { ...current };
-      delete next[previousCardIndex];
-      return next;
-    });
+    setExpandedStoryId(null);
+    pendingForwardDecisionRef.current = null;
+    carouselRef.current?.prev();
   };
 
   const handleNext = () => {
@@ -78,11 +143,17 @@ export function TodayScreen() {
       return;
     }
 
-    swiperRef.current?.swipeRight();
+    if (finalizeBriefIfNeeded()) {
+      return;
+    }
+
+    setExpandedStoryId(null);
+    pendingForwardDecisionRef.current = 'read';
+    carouselRef.current?.next();
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <LinearGradient
         colors={['#CFE0EA', '#EAF2F6', '#F8FAFA']}
         locations={[0, 0.38, 1]}
@@ -133,68 +204,51 @@ export function TodayScreen() {
               <ProgressHeader completed={handledCount} total={totalCount} />
             </View>
 
-            <View style={[styles.swiperContainer, { height: deckViewportHeight }]}>
-              <Swiper
-                ref={swiperRef}
-                cards={mockNews}
-                containerStyle={styles.swiperInnerContainer}
-                cardStyle={[styles.swiperCard, { height: deckCardHeight }]}
-                renderCard={(story) =>
-                  story ? (
-                    <StoryCard story={story} />
-                  ) : (
-                    <View style={styles.emptyCard}>
-                      <Text style={styles.emptyText}>No stories available.</Text>
-                    </View>
-                  )
-                }
-                cardVerticalMargin={deckCardTop}
-                cardHorizontalMargin={cardHorizontalMargin}
-                showSecondCard
-                stackSize={3}
-                stackScale={8}
-                stackSeparation={18}
-                secondCardZoom={0.94}
-                backgroundColor="transparent"
-                useViewOverflow
-                verticalSwipe={false}
-                disableTopSwipe
-                disableBottomSwipe
-                animateCardOpacity
-                onSwiped={(index) => setCurrentIndex(Math.min(index + 1, totalCount))}
-                onSwipedLeft={(index) =>
-                  setDecisions((current) => ({
-                    ...current,
-                    [index]: 'skip',
-                  }))
-                }
-                onSwipedRight={(index) =>
-                  setDecisions((current) => ({
-                    ...current,
-                    [index]: 'read',
-                  }))
-                }
-                onSwipedAll={() => {
-                  setCurrentIndex(totalCount);
-                  setHasCompletedToday(true);
-                  if (!streakAwardedForToday) {
-                    setCurrentStreak((current) => current + 1);
-                    setStreakAwardedForToday(true);
-                  }
-                }}
-              />
-            </View>
+            <View style={styles.deckLayout}>
+              <View style={[styles.swiperContainer, { height: deckViewportHeight }]}> 
+                <Carousel
+                  ref={carouselRef}
+                  data={mockNews}
+                  loop={false}
+                  width={carouselViewportWidth}
+                  height={deckCardHeight}
+                  style={styles.carousel}
+                  defaultIndex={0}
+                  windowSize={5}
+                  fixedDirection="positive"
+                  customAnimation={animationStyle}
+                  onConfigurePanGesture={(g) => {
+                    g.onChange((e) => {
+                      'worklet';
+                      directionAnimVal.value = Math.sign(e.translationX);
+                    });
+                  }}
+                  onSnapToItem={handleSnapToItem}
+                  renderItem={({ item }) => (
+                    <Animated.View style={[styles.carouselItemWrap, { width: deckWidth }]}> 
+                      <StoryCard
+                        story={item}
+                        expanded={expandedStoryId === item.id}
+                        onToggleExpand={(nextExpanded) =>
+                          setExpandedStoryId(nextExpanded ? item.id : null)
+                        }
+                      />
+                    </Animated.View>
+                  )}
+                />
+              </View>
 
-            <View style={styles.footerControls}>
-              <Pressable style={styles.secondaryButton} onPress={handlePrevious}>
-                <Text style={styles.secondaryButtonText}>&lt; Previous</Text>
-              </Pressable>
-              <Pressable style={styles.primaryButton} onPress={handleNext}>
-                <Text style={styles.primaryButtonText}>Next &gt;</Text>
-              </Pressable>
+              <View style={styles.footerControls}>
+                <Pressable style={styles.secondaryButton} onPress={handlePrevious}>
+                  <Text style={styles.secondaryButtonText}>&lt; Previous</Text>
+                </Pressable>
+                <Pressable style={styles.primaryButton} onPress={handleNext}>
+                  <Text style={styles.primaryButtonText}>
+                    {currentIndex === totalCount - 1 ? 'Finish' : 'Next >'}
+                  </Text>
+                </Pressable>
+              </View>
             </View>
-
-            <Text style={styles.counterNote}>Read: {readCount}  Skipped: {skippedCount}</Text>
           </>
         )}
       </View>
@@ -205,13 +259,13 @@ export function TodayScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   backgroundGradient: {
     position: 'absolute',
     top: 0,
     right: 0,
-    bottom: 0,
+    bottom: -140,
     left: 0,
   },
   container: {
@@ -269,26 +323,33 @@ const styles = StyleSheet.create({
     ...typography.bodyStrong,
   },
   headerGroup: {
-    gap: spacing.md,
+    gap: spacing.xs,
+  },
+  deckLayout: {
+    flex: 1,
+    width: '100%',
+    position: 'relative',
+    paddingBottom: 92,
+    alignItems: 'center',
   },
   swiperContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm,
     width: '100%',
-    marginHorizontal: -spacing.xl,
+    marginTop: -spacing.xs,
     overflow: 'visible',
   },
-  swiperInnerContainer: {
-    alignSelf: 'stretch',
-    alignItems: 'stretch',
-    justifyContent: 'flex-start',
+  carousel: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
     overflow: 'visible',
   },
-  swiperCard: {
-    marginLeft: 0,
-    marginRight: 0,
-    overflow: 'visible',
+  carouselItemWrap: {
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
   },
   emptyCard: {
     backgroundColor: colors.card,
@@ -304,10 +365,13 @@ const styles = StyleSheet.create({
     ...typography.body,
   },
   footerControls: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: spacing.md,
-    marginTop: spacing.sm,
     zIndex: 20,
   },
   secondaryButton: {
@@ -333,10 +397,5 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: '#FFFFFF',
     ...typography.bodyStrong,
-  },
-  counterNote: {
-    color: colors.tertiaryText,
-    textAlign: 'center',
-    ...typography.caption,
   },
 });
