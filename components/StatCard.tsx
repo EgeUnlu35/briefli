@@ -1,7 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-
-import { colors, radii, spacing, typography } from '@/theme';
+import { Text, View } from 'react-native';
 
 type StatCardProps = {
   label: string;
@@ -10,30 +8,9 @@ type StatCardProps = {
 
 export function StatCard({ label, value }: StatCardProps) {
   return (
-    <View style={styles.card}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
+    <View className="min-w-[100px] flex-1 gap-sm rounded-lg border border-border bg-card p-lg">
+      <Text className="text-[13px] font-medium leading-[18px] text-secondary-text">{label}</Text>
+      <Text className="text-[16px] font-semibold leading-[24px] text-text">{value}</Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    flex: 1,
-    minWidth: 100,
-    backgroundColor: colors.card,
-    borderRadius: radii.lg,
-    borderColor: colors.border,
-    borderWidth: 1,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  label: {
-    color: colors.secondaryText,
-    ...typography.caption,
-  },
-  value: {
-    color: colors.text,
-    ...typography.bodyStrong,
-  },
-});

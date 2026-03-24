@@ -1,7 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-
-import { colors, radii, spacing, typography } from '@/theme';
+import { Text, View } from 'react-native';
 
 export type ChatRole = 'user' | 'assistant';
 
@@ -19,48 +17,17 @@ export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user';
 
   return (
-    <View style={[styles.row, isUser ? styles.userRow : styles.assistantRow]}>
-      <View style={[styles.bubble, isUser ? styles.userBubble : styles.assistantBubble]}>
-        <Text style={[styles.text, isUser ? styles.userText : styles.assistantText]}>{message.text}</Text>
+    <View className={`mb-md w-full ${isUser ? 'items-end' : 'items-start'}`}>
+      <View
+        className={`max-w-[84%] rounded-md px-lg py-md ${
+          isUser
+            ? 'rounded-tr-[4px] bg-primary'
+            : 'rounded-tl-[4px] border border-border bg-card'
+        }`}>
+        <Text className={`text-[16px] leading-[24px] ${isUser ? 'text-white' : 'text-text'}`}>
+          {message.text}
+        </Text>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    marginBottom: spacing.md,
-    width: '100%',
-  },
-  userRow: {
-    alignItems: 'flex-end',
-  },
-  assistantRow: {
-    alignItems: 'flex-start',
-  },
-  bubble: {
-    maxWidth: '82%',
-    borderRadius: radii.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-  },
-  userBubble: {
-    backgroundColor: colors.primary,
-    borderTopRightRadius: spacing.xs,
-  },
-  assistantBubble: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderTopLeftRadius: spacing.xs,
-  },
-  text: {
-    ...typography.body,
-  },
-  userText: {
-    color: '#FFFFFF',
-  },
-  assistantText: {
-    color: colors.text,
-  },
-});

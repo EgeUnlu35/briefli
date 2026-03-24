@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { Extrapolation, interpolate, useSharedValue } from 'react-native-reanimated';
 import Carousel, { ICarouselInstance, TAnimationStyle } from 'react-native-reanimated-carousel';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,8 +9,9 @@ import { AppHeader } from '@/components/AppHeader';
 import { CompletionView } from '@/components/CompletionView';
 import { ProgressHeader } from '@/components/ProgressHeader';
 import { StoryCard } from '@/components/StoryCard';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { mockNews } from '@/data/mockNews';
-import { colors, radii, spacing, typography } from '@/theme';
+import { spacing } from '@/theme';
 
 export function TodayScreen() {
   const carouselRef = useRef<ICarouselInstance | null>(null);
@@ -26,9 +27,13 @@ export function TodayScreen() {
   const [expandedStoryId, setExpandedStoryId] = useState<string | null>(null);
   const [decisions, setDecisions] = useState<Record<number, 'read' | 'skip'>>({});
 
+  // Adjust this to control how many trailing cards are visible behind the active card.
+  const visibleDeckDepth = 2;
+
   const totalCount = mockNews.length;
-  const deckWidth = Math.min(360, Math.max(260, screenWidth - spacing.xxxl * 2));
-  const carouselViewportWidth = screenWidth;
+  const carouselViewportWidth = Math.max(0, screenWidth - spacing.xl * 2);
+  const deckWidth = Math.min(420, Math.max(300, carouselViewportWidth - spacing.md));
+  const carouselWindowSize = Math.max(3, visibleDeckDepth * 2 + 1);
   const activeStoryId = currentIndex < totalCount ? mockNews[currentIndex]?.id : null;
   const hasExpandedCurrentCard = Boolean(activeStoryId && expandedStoryId === activeStoryId);
   const deckViewportHeight = hasExpandedCurrentCard ? 700 : 580;
@@ -69,8 +74,13 @@ export function TodayScreen() {
         interpolate(value, [-1, 0], [deckWidth, 0], Extrapolation.CLAMP) * directionAnimVal.value;
       const rotateZ =
         interpolate(value, [-1, 0], [14, 0], Extrapolation.CLAMP) * directionAnimVal.value;
-      const scale = interpolate(value, [0, 1], [1, 0.95], Extrapolation.CLAMP);
-      const opacity = interpolate(value, [-1, -0.8, 0, 1], [0, 0.88, 1, 0.84], Extrapolation.EXTEND);
+      const scale = interpolate(value, [0, 1, visibleDeckDepth], [1, 0.95, 0.91], Extrapolation.CLAMP);
+      const opacity = interpolate(
+        value,
+        [-1, -0.8, 0, 1, visibleDeckDepth],
+        [0, 0.88, 1, 0.84, 0],
+        Extrapolation.CLAMP
+      );
       const zIndex = -10 * index;
 
       return {
@@ -84,7 +94,7 @@ export function TodayScreen() {
         zIndex,
       };
     },
-    [deckWidth, directionAnimVal]
+    [deckWidth, directionAnimVal, visibleDeckDepth]
   );
 
   const handleSnapToItem = (nextIndex: number) => {
@@ -153,33 +163,44 @@ export function TodayScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-transparent" edges={['top']}>
       <LinearGradient
         colors={['#CFE0EA', '#EAF2F6', '#F8FAFA']}
         locations={[0, 0.38, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0.95, y: 1 }}
-        style={styles.backgroundGradient}
+        style={{ position: 'absolute', top: 0, right: 0, bottom: -140, left: 0 }}
       />
-      <View style={styles.container}>
+      <View className="flex-1 gap-lg bg-transparent px-xl pb-xl pt-sm">
         {!sessionStarted ? (
           <>
             <AppHeader title="Briefli" />
 
-            <View style={styles.heroWrapper}>
-              <View style={styles.streakPill}>
-                <Text style={styles.streakText}>{currentStreak} day streak</Text>
+            <View className="flex-1 items-center justify-center gap-lg">
+              <View className="rounded-pill border border-[rgba(255,255,255,0.9)] bg-[rgba(255,255,255,0.7)] px-xl py-sm">
+                <Text className="text-[13px] font-medium uppercase leading-[18px] tracking-[0.8px] text-text">
+                  {currentStreak} day streak
+                </Text>
               </View>
-              <Text style={styles.heroTitle}>
+              <Text className="text-center text-[34px] font-extrabold leading-[40px] text-text">
                 {hasCompletedToday ? 'You are informed for today.' : 'Your Daily Brief is ready.'}
               </Text>
-              <Text style={styles.heroSubtitle}>
+              <Text className="text-center text-[16px] leading-[24px] text-secondary-text">
                 {hasCompletedToday
                   ? 'Nice work. Come back tomorrow for a new brief, or review today\'s cards.'
                   : `${totalCount} curated insights distilled from the noise, ready for your morning flow.`}
               </Text>
-              <Pressable style={styles.startButton} onPress={handleStart}>
-                <Text style={styles.startButtonText}>
+              <Pressable
+                className="mt-md rounded-pill bg-primary px-xxxl py-lg"
+                style={{
+                  shadowColor: '#4E6073',
+                  shadowOffset: { width: 0, height: 12 },
+                  shadowOpacity: 0.24,
+                  shadowRadius: 24,
+                  elevation: 4,
+                }}
+                onPress={handleStart}>
+                <Text className="text-[16px] font-semibold leading-[24px] text-white">
                   {hasCompletedToday ? 'Review Today\'s Brief' : 'Start Daily Brief'}
                 </Text>
               </Pressable>
@@ -199,23 +220,30 @@ export function TodayScreen() {
           </>
         ) : (
           <>
-            <View style={styles.headerGroup}>
+            <View className="gap-xs">
               <AppHeader title="Briefli" leftIconName="xmark" onPressLeft={handleBackToToday} />
               <ProgressHeader completed={handledCount} total={totalCount} />
             </View>
 
-            <View style={styles.deckLayout}>
-              <View style={[styles.swiperContainer, { height: deckViewportHeight }]}> 
+            <View className="relative w-full flex-1 items-center pb-[92px]">
+              <View
+                className="mt-[-4px] w-full items-center justify-center overflow-visible"
+                style={{ height: deckViewportHeight }}>
                 <Carousel
                   ref={carouselRef}
                   data={mockNews}
                   loop={false}
                   width={carouselViewportWidth}
                   height={deckCardHeight}
-                  style={styles.carousel}
+                  style={{
+                    width: '100%',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'visible',
+                  }}
                   defaultIndex={0}
-                  windowSize={5}
-                  fixedDirection="positive"
+                  windowSize={carouselWindowSize}
+                  fixedDirection="negative"
                   customAnimation={animationStyle}
                   onConfigurePanGesture={(g) => {
                     g.onChange((e) => {
@@ -225,7 +253,13 @@ export function TodayScreen() {
                   }}
                   onSnapToItem={handleSnapToItem}
                   renderItem={({ item }) => (
-                    <Animated.View style={[styles.carouselItemWrap, { width: deckWidth }]}> 
+                    <Animated.View
+                      style={{
+                        height: '100%',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        width: deckWidth,
+                      }}>
                       <StoryCard
                         story={item}
                         expanded={expandedStoryId === item.id}
@@ -238,14 +272,16 @@ export function TodayScreen() {
                 />
               </View>
 
-              <View style={styles.footerControls}>
-                <Pressable style={styles.secondaryButton} onPress={handlePrevious}>
-                  <Text style={styles.secondaryButtonText}>&lt; Previous</Text>
+              <View className="absolute bottom-2 left-0 right-0 z-20 flex-row items-center justify-between px-sm">
+                <Pressable
+                  className="h-14 w-14 items-center justify-center rounded-full bg-surface-high"
+                  onPress={handlePrevious}>
+                  <IconSymbol name="arrow.left" size={26} color="#566162" />
                 </Pressable>
-                <Pressable style={styles.primaryButton} onPress={handleNext}>
-                  <Text style={styles.primaryButtonText}>
-                    {currentIndex === totalCount - 1 ? 'Finish' : 'Next >'}
-                  </Text>
+                <Pressable
+                  className="h-14 w-14 items-center justify-center rounded-full bg-primary"
+                  onPress={handleNext}>
+                  <IconSymbol name="arrow.right" size={26} color="#FFFFFF" />
                 </Pressable>
               </View>
             </View>
@@ -255,147 +291,3 @@ export function TodayScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  backgroundGradient: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: -140,
-    left: 0,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent',
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
-    gap: spacing.lg,
-  },
-  heroWrapper: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.lg,
-  },
-  streakPill: {
-    borderRadius: radii.pill,
-    backgroundColor: 'rgba(255,255,255,0.7)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.9)',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xl,
-  },
-  streakText: {
-    color: colors.text,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    ...typography.caption,
-  },
-  heroTitle: {
-    color: colors.text,
-    textAlign: 'center',
-    ...typography.display,
-  },
-  heroSubtitle: {
-    color: colors.secondaryText,
-    textAlign: 'center',
-    ...typography.body,
-  },
-  startButton: {
-    marginTop: spacing.md,
-    backgroundColor: colors.primary,
-    borderRadius: radii.pill,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xxxl,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.24,
-    shadowRadius: 24,
-    elevation: 4,
-  },
-  startButtonText: {
-    color: '#FFFFFF',
-    ...typography.bodyStrong,
-  },
-  headerGroup: {
-    gap: spacing.xs,
-  },
-  deckLayout: {
-    flex: 1,
-    width: '100%',
-    position: 'relative',
-    paddingBottom: 92,
-    alignItems: 'center',
-  },
-  swiperContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    marginTop: -spacing.xs,
-    overflow: 'visible',
-  },
-  carousel: {
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'visible',
-  },
-  carouselItemWrap: {
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.sm,
-  },
-  emptyCard: {
-    backgroundColor: colors.card,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 440,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyText: {
-    color: colors.secondaryText,
-    ...typography.body,
-  },
-  footerControls: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-    zIndex: 20,
-  },
-  secondaryButton: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: radii.pill,
-    paddingVertical: spacing.md,
-  },
-  secondaryButtonText: {
-    color: colors.secondaryText,
-    ...typography.bodyStrong,
-  },
-  primaryButton: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-    borderRadius: radii.pill,
-    paddingVertical: spacing.md,
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    ...typography.bodyStrong,
-  },
-});

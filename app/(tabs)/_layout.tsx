@@ -5,8 +5,8 @@ import { View } from 'react-native';
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
-import { tabRoutes } from '@/navigation/tabs';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { tabRoutes } from '@/navigation/tabs';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -19,6 +19,7 @@ export default function TabLayout() {
         tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].tabIconDefault,
         tabBarShowLabel: false,
         sceneStyle: {
+          backgroundColor: 'transparent',
           paddingBottom: 108,
         },
         tabBarStyle: {

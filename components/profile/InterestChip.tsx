@@ -1,8 +1,8 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, Text } from 'react-native';
 
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { colors, radii, spacing, typography } from '@/theme';
+import { colors } from '@/theme';
 
 type InterestChipProps = {
   label: string;
@@ -12,8 +12,14 @@ type InterestChipProps = {
 
 export function InterestChip({ label, selected, onPress }: InterestChipProps) {
   return (
-    <Pressable style={[styles.chip, selected ? styles.chipSelected : styles.chipIdle]} onPress={onPress}>
-      <Text style={[styles.label, selected ? styles.labelSelected : styles.labelIdle]}>{label}</Text>
+    <Pressable
+      className={`flex-row items-center gap-sm rounded-pill px-lg py-sm ${
+        selected ? 'bg-primary' : 'bg-surface-high'
+      }`}
+      onPress={onPress}>
+      <Text className={`text-[16px] font-semibold leading-[24px] ${selected ? 'text-white' : 'text-text'}`}>
+        {label}
+      </Text>
       <IconSymbol
         name={selected ? 'xmark' : 'plus'}
         size={14}
@@ -22,29 +28,3 @@ export function InterestChip({ label, selected, onPress }: InterestChipProps) {
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: radii.pill,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    gap: spacing.sm,
-  },
-  chipSelected: {
-    backgroundColor: colors.primary,
-  },
-  chipIdle: {
-    backgroundColor: colors.surfaceContainerHigh,
-  },
-  label: {
-    ...typography.bodyStrong,
-  },
-  labelSelected: {
-    color: '#FFFFFF',
-  },
-  labelIdle: {
-    color: colors.text,
-  },
-});

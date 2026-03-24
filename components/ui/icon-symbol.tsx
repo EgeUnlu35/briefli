@@ -27,6 +27,8 @@ const MAPPING = {
   'moon.stars.fill': 'dark-mode',
   'bell.badge.fill': 'notifications-active',
   'book.fill': 'auto-stories',
+  'arrow.left': 'arrow-back',
+  'arrow.right': 'arrow-forward',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
 } as IconMapping;

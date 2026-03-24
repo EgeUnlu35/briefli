@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, Switch, Text, View } from 'react-native';
+import { Switch, Text, View } from 'react-native';
 
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { colors, radii, spacing, typography } from '@/theme';
+import { colors } from '@/theme';
 
 type IconName = React.ComponentProps<typeof IconSymbol>['name'];
 
@@ -22,14 +22,14 @@ export function PreferenceRow({
   onValueChange,
 }: PreferenceRowProps) {
   return (
-    <View style={styles.row}>
-      <View style={styles.leftGroup}>
-        <View style={styles.iconBubble}>
+    <View className="flex-row items-center justify-between gap-md rounded-lg bg-surface-low p-lg">
+      <View className="flex-1 flex-row items-center gap-md">
+        <View className="h-11 w-11 items-center justify-center rounded-full bg-card">
           <IconSymbol name={iconName} size={20} color={colors.primary} />
         </View>
-        <View style={styles.textGroup}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
+        <View className="flex-1 gap-xs">
+          <Text className="text-[16px] font-semibold leading-[24px] text-text">{title}</Text>
+          <Text className="text-[13px] font-medium leading-[18px] text-secondary-text">{subtitle}</Text>
         </View>
       </View>
 
@@ -42,41 +42,3 @@ export function PreferenceRow({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    backgroundColor: colors.surfaceContainerLow,
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-  },
-  leftGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: spacing.md,
-  },
-  iconBubble: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-  },
-  textGroup: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  title: {
-    color: colors.text,
-    ...typography.bodyStrong,
-  },
-  subtitle: {
-    color: colors.secondaryText,
-    ...typography.caption,
-  },
-});
