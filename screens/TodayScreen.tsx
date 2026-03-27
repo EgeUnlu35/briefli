@@ -24,7 +24,6 @@ export function TodayScreen() {
   const [hasCompletedToday, setHasCompletedToday] = useState(false);
   const [streakAwardedForToday, setStreakAwardedForToday] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [expandedStoryId, setExpandedStoryId] = useState<string | null>(null);
   const [decisions, setDecisions] = useState<Record<number, 'read' | 'skip'>>({});
 
   // Adjust this to control how many trailing cards are visible behind the active card.
@@ -34,10 +33,6 @@ export function TodayScreen() {
   const carouselViewportWidth = Math.max(0, screenWidth - spacing.xl * 2);
   const deckWidth = Math.min(420, Math.max(300, carouselViewportWidth - spacing.md));
   const carouselWindowSize = Math.max(3, visibleDeckDepth * 2 + 1);
-  const activeStoryId = currentIndex < totalCount ? mockNews[currentIndex]?.id : null;
-  const hasExpandedCurrentCard = Boolean(activeStoryId && expandedStoryId === activeStoryId);
-  const deckViewportHeight = hasExpandedCurrentCard ? 700 : 580;
-  const deckCardHeight = hasExpandedCurrentCard ? 620 : 500;
   const handledCount = currentIndex;
   const isComplete = handledCount >= totalCount;
   const readCount = useMemo(
@@ -50,7 +45,6 @@ export function TodayScreen() {
       return false;
     }
 
-    setExpandedStoryId(null);
     setDecisions((current) => ({
       ...current,
       [currentIndex]: 'read',
@@ -94,7 +88,8 @@ export function TodayScreen() {
         zIndex,
       };
     },
-    [deckWidth, directionAnimVal, visibleDeckDepth]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [deckWidth, visibleDeckDepth]
   );
 
   const handleSnapToItem = (nextIndex: number) => {
@@ -116,14 +111,12 @@ export function TodayScreen() {
 
     pendingForwardDecisionRef.current = null;
     previousIndexRef.current = nextIndex;
-    setExpandedStoryId(null);
     setCurrentIndex(nextIndex);
   };
 
   const handleRestart = () => {
     setSessionStarted(true);
     setCurrentIndex(0);
-    setExpandedStoryId(null);
     previousIndexRef.current = 0;
     pendingForwardDecisionRef.current = null;
     setDecisions({});
@@ -143,7 +136,6 @@ export function TodayScreen() {
       return;
     }
 
-    setExpandedStoryId(null);
     pendingForwardDecisionRef.current = null;
     carouselRef.current?.prev();
   };
@@ -157,7 +149,6 @@ export function TodayScreen() {
       return;
     }
 
-    setExpandedStoryId(null);
     pendingForwardDecisionRef.current = 'read';
     carouselRef.current?.next();
   };
@@ -220,21 +211,19 @@ export function TodayScreen() {
           </>
         ) : (
           <>
-            <View className="gap-xs">
+            <View className="gap-xs z-10">
               <AppHeader title="Briefli" leftIconName="xmark" onPressLeft={handleBackToToday} />
               <ProgressHeader completed={handledCount} total={totalCount} />
             </View>
 
-            <View className="relative w-full flex-1 items-center pb-[92px]">
-              <View
-                className="mt-[-4px] w-full items-center justify-center overflow-visible"
-                style={{ height: deckViewportHeight }}>
+            <View className="relative w-full flex-1 items-center pt-xl">
+              <View className="w-full flex-1 items-center justify-center overflow-visible">
                 <Carousel
                   ref={carouselRef}
                   data={mockNews}
                   loop={false}
                   width={carouselViewportWidth}
-                  height={deckCardHeight}
+                  height={600}
                   style={{
                     width: '100%',
                     alignItems: 'center',
@@ -260,13 +249,7 @@ export function TodayScreen() {
                         alignItems: 'center',
                         width: deckWidth,
                       }}>
-                      <StoryCard
-                        story={item}
-                        expanded={expandedStoryId === item.id}
-                        onToggleExpand={(nextExpanded) =>
-                          setExpandedStoryId(nextExpanded ? item.id : null)
-                        }
-                      />
+                      <StoryCard story={item} />
                     </Animated.View>
                   )}
                 />
@@ -274,12 +257,20 @@ export function TodayScreen() {
 
               <View className="absolute bottom-2 left-0 right-0 z-20 flex-row items-center justify-between px-sm">
                 <Pressable
-                  className="h-14 w-14 items-center justify-center rounded-full bg-surface-high"
+                  className="h-14 w-14 items-center justify-center rounded-full"
+                  style={{
+                    backgroundColor: 'rgba(225, 234, 235, 0.7)',
+                    borderWidth: 1,
+                    borderColor: 'rgba(114, 125, 126, 0.18)',
+                  }}
                   onPress={handlePrevious}>
                   <IconSymbol name="arrow.left" size={26} color="#566162" />
                 </Pressable>
                 <Pressable
-                  className="h-14 w-14 items-center justify-center rounded-full bg-primary"
+                  className="h-14 w-14 items-center justify-center rounded-full"
+                  style={{
+                    backgroundColor: 'rgba(78, 96, 115, 0.82)',
+                  }}
                   onPress={handleNext}>
                   <IconSymbol name="arrow.right" size={26} color="#FFFFFF" />
                 </Pressable>

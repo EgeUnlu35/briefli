@@ -1,5 +1,6 @@
 import React from 'react';
 import { Text, View } from 'react-native';
+import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 
 type ProgressHeaderProps = {
   completed: number;
@@ -8,6 +9,14 @@ type ProgressHeaderProps = {
 
 export function ProgressHeader({ completed, total }: ProgressHeaderProps) {
   const progress = total > 0 ? completed / total : 0;
+  const fillPercent = Math.max(progress, 0.03) * 100;
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    width: withSpring(`${fillPercent}%`, {
+      damping: 20,
+      stiffness: 120,
+    }),
+  }));
 
   return (
     <View className="gap-sm">
@@ -20,9 +29,9 @@ export function ProgressHeader({ completed, total }: ProgressHeaderProps) {
         </Text>
       </View>
       <View className="h-[6px] w-full overflow-hidden rounded-pill bg-surface-high">
-        <View
+        <Animated.View
           className="h-full rounded-pill bg-secondary"
-          style={{ width: `${Math.max(progress, 0.03) * 100}%` }}
+          style={animatedStyle}
         />
       </View>
     </View>
