@@ -145,9 +145,7 @@ export function TodayScreen() {
       return;
     }
 
-    if (finalizeBriefIfNeeded()) {
-      return;
-    }
+    finalizeBriefIfNeeded();
 
     pendingForwardDecisionRef.current = 'read';
     carouselRef.current?.next();
@@ -197,18 +195,6 @@ export function TodayScreen() {
               </Pressable>
             </View>
           </>
-        ) : isComplete ? (
-          <>
-            <AppHeader title="Briefli" leftIconName="xmark" onPressLeft={handleBackToToday} />
-
-            <CompletionView
-              readCount={readCount}
-              totalCount={totalCount}
-              currentStreak={currentStreak}
-              onRestart={handleRestart}
-              onBackToToday={handleBackToToday}
-            />
-          </>
         ) : (
           <>
             <View className="gap-xs z-10">
@@ -216,66 +202,76 @@ export function TodayScreen() {
               <ProgressHeader completed={handledCount} total={totalCount} />
             </View>
 
-            <View className="relative w-full flex-1 items-center pt-xl">
-              <View className="w-full flex-1 items-center justify-center overflow-visible">
-                <Carousel
-                  ref={carouselRef}
-                  data={mockNews}
-                  loop={false}
-                  width={carouselViewportWidth}
-                  height={600}
-                  style={{
-                    width: '100%',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'visible',
-                  }}
-                  defaultIndex={0}
-                  windowSize={carouselWindowSize}
-                  fixedDirection="negative"
-                  customAnimation={animationStyle}
-                  onConfigurePanGesture={(g) => {
-                    g.onChange((e) => {
-                      'worklet';
-                      directionAnimVal.value = Math.sign(e.translationX);
-                    });
-                  }}
-                  onSnapToItem={handleSnapToItem}
-                  renderItem={({ item }) => (
-                    <Animated.View
-                      style={{
-                        height: '100%',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        width: deckWidth,
-                      }}>
-                      <StoryCard story={item} />
-                    </Animated.View>
-                  )}
-                />
-              </View>
+            {isComplete ? (
+              <CompletionView
+                readCount={readCount}
+                totalCount={totalCount}
+                currentStreak={currentStreak}
+                onRestart={handleRestart}
+                onBackToToday={handleBackToToday}
+              />
+            ) : (
+              <View className="relative w-full flex-1 items-center pt-xl">
+                <View className="w-full flex-1 items-center justify-center overflow-visible">
+                  <Carousel
+                    ref={carouselRef}
+                    data={mockNews}
+                    loop={false}
+                    width={carouselViewportWidth}
+                    height={600}
+                    style={{
+                      width: '100%',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'visible',
+                    }}
+                    defaultIndex={0}
+                    windowSize={carouselWindowSize}
+                    fixedDirection="negative"
+                    customAnimation={animationStyle}
+                    onConfigurePanGesture={(g) => {
+                      g.onChange((e) => {
+                        'worklet';
+                        directionAnimVal.value = Math.sign(e.translationX);
+                      });
+                    }}
+                    onSnapToItem={handleSnapToItem}
+                    renderItem={({ item }) => (
+                      <Animated.View
+                        style={{
+                          height: '100%',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          width: deckWidth,
+                        }}>
+                        <StoryCard story={item} />
+                      </Animated.View>
+                    )}
+                  />
+                </View>
 
-              <View className="absolute bottom-2 left-0 right-0 z-20 flex-row items-center justify-between px-sm">
-                <Pressable
-                  className="h-14 w-14 items-center justify-center rounded-full"
-                  style={{
-                    backgroundColor: 'rgba(225, 234, 235, 0.7)',
-                    borderWidth: 1,
-                    borderColor: 'rgba(114, 125, 126, 0.18)',
-                  }}
-                  onPress={handlePrevious}>
-                  <IconSymbol name="arrow.left" size={26} color="#566162" />
-                </Pressable>
-                <Pressable
-                  className="h-14 w-14 items-center justify-center rounded-full"
-                  style={{
-                    backgroundColor: 'rgba(78, 96, 115, 0.82)',
-                  }}
-                  onPress={handleNext}>
-                  <IconSymbol name="arrow.right" size={26} color="#FFFFFF" />
-                </Pressable>
+                <View className="absolute bottom-2 left-0 right-0 z-20 flex-row items-center justify-between px-sm">
+                  <Pressable
+                    className="h-14 w-14 items-center justify-center rounded-full"
+                    style={{
+                      backgroundColor: 'rgba(225, 234, 235, 0.7)',
+                      borderWidth: 1,
+                      borderColor: 'rgba(114, 125, 126, 0.18)',
+                    }}
+                    onPress={handlePrevious}>
+                    <IconSymbol name="arrow.left" size={26} color="#566162" />
+                  </Pressable>
+                  <Pressable
+                    className="h-14 w-14 items-center justify-center rounded-full"
+                    style={{
+                      backgroundColor: 'rgba(78, 96, 115, 0.82)',
+                    }}
+                    onPress={handleNext}>
+                    <IconSymbol name="arrow.right" size={26} color="#FFFFFF" />
+                  </Pressable>
+                </View>
               </View>
-            </View>
+            )}
           </>
         )}
       </View>

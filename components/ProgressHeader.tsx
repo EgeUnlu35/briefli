@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 type ProgressHeaderProps = {
   completed: number;
@@ -12,9 +12,9 @@ export function ProgressHeader({ completed, total }: ProgressHeaderProps) {
   const fillPercent = Math.max(progress, 0.03) * 100;
 
   const animatedStyle = useAnimatedStyle(() => ({
-    width: withSpring(`${fillPercent}%`, {
-      damping: 20,
-      stiffness: 120,
+    width: withTiming(`${fillPercent}%`, {
+      duration: 300,
+      easing: Easing.out(Easing.quad),
     }),
   }));
 
